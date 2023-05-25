@@ -8,14 +8,29 @@ import (
 	"github.com/akyrey/monkey-programming-language/token"
 )
 
+// Defines precedences of the Moneky programming language
+// The order is really important
+const (
+	_ int = iota // this gives the following constants incrementing numbers as values, starting with 0 here
+	LOWEST
+	EQUALS         // ==
+	LESSER_GREATER // > or <
+	SUM            // +
+	PRODUCT        // *
+	PREFIX         // -X or !X
+	CALL           // myFunction(X)
+)
+
 // We need to look at the curToken, which is the current token under
 // examination, to decide what to do next, and we also need peekToken for this decision if curToken
 // doesn’t give us enough information.
 type Parser struct {
-	l         *lexer.Lexer
-	curToken  token.Token
-	peekToken token.Token
-	errors    []string
+	l              *lexer.Lexer
+	curToken       token.Token
+	peekToken      token.Token
+	errors         []string
+	prefixParseFns map[token.TokenType]prefixParseFn
+	infixParseFns  map[token.TokenType]infixParseFn
 }
 
 func New(l *lexer.Lexer) *Parser {
@@ -61,7 +76,7 @@ func (p *Parser) parseStatement() ast.Statement {
 	case token.RETURN:
 		return p.parseReturnStatement()
 	default:
-		return nil
+		return p.parseExpressionStatement()
 	}
 }
 
@@ -90,9 +105,9 @@ func (p *Parser) parseLetStatement() *ast.LetStatement {
 }
 
 func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
-    stmt := &ast.ReturnStatement{Token: p.curToken}
+	stmt := &ast.ReturnStatement{Token: p.curToken}
 
-    p.nextToken()
+	p.nextToken()
 
 	// TODO: We're skipping the expressions until we encounter a semicolon
 	for !p.curTokenIs(token.SEMICOLON) {
@@ -101,6 +116,22 @@ func (p *Parser) parseReturnStatement() *ast.ReturnStatement {
 
 	return stmt
 }
+
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+
+	// We pass the lowest possibile precedence since we didn't parse anything yet
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	// The token.SEMICOLON is optional, we want to be able to write an expression like 5 + 5
+	if p.peekTokenIs(token.SEMICOLON) {
+		p.nextToken()
+	}
+
+	return stmt
+}
+
+func (p *Parser) parseExpression(precedence int)
 
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
@@ -130,4 +161,18 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 func (p *Parser) peekError(t token.TokenType) {
 	msg := fmt.Sprintf("Expected next token to be %s, got %s instead", t, p.peekToken.Type)
 	p.errors = append(p.errors, msg)
+}
+
+// Prefix operator doesn't have a "left side" per definition
+// The infix function has an argument that is the "left side" of the infix operator
+type (
+	prefixParseFn func() ast.Expression
+	infixParseFn  func(ast.Expression) ast.Expression
+)
+
+func (p *Parser) registerPrefix(tokenType token.TokenType, fn prefixParseFn) {
+	p.prefixParseFns[tokenType] = fn
+}
+func (p *Parser) registerInfix(tokenType token.TokenType, fn infixParseFn) {
+	p.infixParseFns[tokenType] = fn
 }

@@ -102,7 +102,7 @@ func (l *Lexer) NextToken() token.Token {
 	case '<':
 		tok = newToken(token.LT, l.ch)
 	case '>':
-		tok = newToken(token.RT, l.ch)
+		tok = newToken(token.GT, l.ch)
 	case ',':
 		tok = newToken(token.COMMA, l.ch)
 	case ';':

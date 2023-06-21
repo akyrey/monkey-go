@@ -6,7 +6,7 @@ import (
 	"io"
 
 	"github.com/akyrey/monkey-programming-language/lexer"
-	"github.com/akyrey/monkey-programming-language/token"
+	"github.com/akyrey/monkey-programming-language/parser"
 )
 
 const PROMPT = ">> "
@@ -25,10 +25,39 @@ func Start(in io.Reader, out io.Writer) {
 		// Take the just read line and pass it to an instance of our lexer
 		line := scanner.Text()
 		l := lexer.New(line)
+		// Pass the lexer to a newly created parser
+		p := parser.New(l)
 
-		// Print all the tokens the lexer gives us until we encounter EOF
-		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-			fmt.Fprintf(out, "%+v\n", tok)
+		// Parse statements and check for errors
+		program := p.ParseProgram()
+		if len(p.Errors()) != 0 {
+			printParserErrors(out, p.Errors())
+			continue
 		}
+
+		io.WriteString(out, program.String())
+		io.WriteString(out, "\n")
+	}
+}
+
+const MONKEY_FACE = `            __,__
+   .--.  .-"     "-.  .--.
+  / .. \/  .-. .-.  \/ .. \
+ | |  '|  /   Y   \  |'  | |
+ | \   \  \ 0 | 0 /  /   / |
+  \ '- ,\.-"""""""-./, -' /
+   ''-' /_   ^ ^   _\ '-''
+       |  \._   _./  |
+       \   \ '~' /   /
+        '._ '-=-' _.'
+           '-----'
+`
+
+func printParserErrors(out io.Writer, errors []string) {
+	io.WriteString(out, MONKEY_FACE)
+	io.WriteString(out, "Woops! We ran into some monkey business here!\n")
+	io.WriteString(out, " Parser errors:\n")
+	for _, msg := range errors {
+		io.WriteString(out, "\t"+msg+"\n")
 	}
 }

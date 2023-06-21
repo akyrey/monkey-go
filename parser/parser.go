@@ -32,6 +32,7 @@ var precedences = map[token.TokenType]int{
 	token.MINUS:    SUM,
 	token.SLASH:    PRODUCT,
 	token.ASTERISK: PRODUCT,
+	token.LPAREN:   CALL,
 }
 
 // We need to look at the curToken, which is the current token under
@@ -76,6 +77,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.NOT_EQ, p.parseInfixExpression)
 	p.registerInfix(token.LT, p.parseInfixExpression)
 	p.registerInfix(token.GT, p.parseInfixExpression)
+	p.registerInfix(token.LPAREN, p.parseCallExpression)
 
 	return p
 }
@@ -362,6 +364,41 @@ func (p *Parser) parseFunctionParameter() []*ast.Identifier {
 	}
 
 	return identifiers
+}
+
+func (p *Parser) parseCallExpression(function ast.Expression) ast.Expression {
+	exp := &ast.CallExpression{Token: p.curToken, Function: function}
+	exp.Arguments = p.parseCallArguments()
+
+	return exp
+}
+
+func (p *Parser) parseCallArguments() []ast.Expression {
+	args := []ast.Expression{}
+
+	// The function doesn't have arguments
+	if p.peekTokenIs(token.RPAREN) {
+		p.nextToken()
+
+		return args
+	}
+
+	// Otherwise we parse the first argument
+	p.nextToken() // Skip LPAREN
+	args = append(args, p.parseExpression(LOWEST))
+
+	// Then all other arguments that are separated by commas
+	for p.peekTokenIs(token.COMMA) {
+		p.nextToken() // Two nextToken to skip the COMMA and place the curToken on the next one
+		p.nextToken()
+		args = append(args, p.parseExpression(LOWEST))
+	}
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return args
 }
 
 func (p *Parser) nextToken() {

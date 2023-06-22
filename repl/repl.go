@@ -1,3 +1,5 @@
+// Read-Evaluate-Print-Loop
+// REPL
 package repl
 
 import (
@@ -5,6 +7,7 @@ import (
 	"fmt"
 	"io"
 
+	"github.com/akyrey/monkey-programming-language/evaluator"
 	"github.com/akyrey/monkey-programming-language/lexer"
 	"github.com/akyrey/monkey-programming-language/parser"
 )
@@ -35,8 +38,13 @@ func Start(in io.Reader, out io.Writer) {
 			continue
 		}
 
-		io.WriteString(out, program.String())
-		io.WriteString(out, "\n")
+		// Evaluate the program
+		evaluated := evaluator.Eval(program)
+
+		if evaluated != nil {
+			io.WriteString(out, evaluated.Inspect())
+			io.WriteString(out, "\n")
+		}
 	}
 }
 

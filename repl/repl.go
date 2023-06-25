@@ -9,6 +9,7 @@ import (
 
 	"github.com/akyrey/monkey-programming-language/evaluator"
 	"github.com/akyrey/monkey-programming-language/lexer"
+	"github.com/akyrey/monkey-programming-language/object"
 	"github.com/akyrey/monkey-programming-language/parser"
 )
 
@@ -16,6 +17,7 @@ const PROMPT = ">> "
 
 func Start(in io.Reader, out io.Writer) {
 	scanner := bufio.NewScanner(in)
+	env := object.NewEnvironment()
 
 	for {
 		fmt.Fprintf(out, PROMPT)
@@ -39,7 +41,7 @@ func Start(in io.Reader, out io.Writer) {
 		}
 
 		// Evaluate the program
-		evaluated := evaluator.Eval(program)
+		evaluated := evaluator.Eval(program, env)
 
 		if evaluated != nil {
 			io.WriteString(out, evaluated.Inspect())

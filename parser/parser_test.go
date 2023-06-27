@@ -64,7 +64,7 @@ func TestReturnStatement(t *testing.T) {
 			t.Fatalf("program.Statements does not contain 1 statements. Got %d", len(program.Statements))
 		}
 
-        stmt := program.Statements[0]
+		stmt := program.Statements[0]
 		returnStmt, ok := stmt.(*ast.ReturnStatement)
 
 		if !ok {
@@ -75,9 +75,9 @@ func TestReturnStatement(t *testing.T) {
 			t.Fatalf("returnStmt.TokenLiteral not 'return', got %q", returnStmt.TokenLiteral())
 		}
 
-        if !testLiteralExpression(t, returnStmt.ReturnValue, tt.expectedValue) {
-            return
-        }
+		if !testLiteralExpression(t, returnStmt.ReturnValue, tt.expectedValue) {
+			return
+		}
 	}
 }
 
@@ -582,6 +582,26 @@ func TestCallExpressionParameterParsing(t *testing.T) {
 				t.Errorf("argument %d wrong. Want %q. Got %q", i, arg, exp.Arguments[i].String())
 			}
 		}
+	}
+}
+
+func TestStringLiteralExpression(t *testing.T) {
+	input := `"hello world";`
+
+	l := lexer.New(input)
+	p := New(l)
+	program := p.ParseProgram()
+	checkParserErrors(t, p)
+
+	stmt := program.Statements[0].(*ast.ExpressionStatement)
+	literal, ok := stmt.Expression.(*ast.StringLiteral)
+
+	if !ok {
+		t.Fatalf("stmt.Expression is not ast.StringLiteral. Got %T", stmt.Expression)
+	}
+
+	if literal.Value != "hello world" {
+		t.Errorf("literal.Value not %q. Got %q", "hello world", literal.Value)
 	}
 }
 

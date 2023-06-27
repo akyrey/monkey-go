@@ -75,7 +75,7 @@ func TestStringComparison(t *testing.T) {
 		{`"Hell World!" == "Hello World!"`, false},
 		{`"Hell World!" != "Hello World!"`, true},
 		{`"Hello World!" != "Hello World!"`, false},
-        {`"Hello" + " " + "World!" == "Hello World!"`, true},
+		{`"Hello" + " " + "World!" == "Hello World!"`, true},
 	}
 
 	for _, tt := range tests {
@@ -291,6 +291,39 @@ let addTwo = newAdder(2);
 addTwo(2);`
 
 	testIntegerObject(t, testEval(input), 4)
+}
+
+func TestBuiltinFunctions(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected interface{}
+	}{
+		{`len("")`, 0},
+		{`len("four")`, 4},
+		{`len("hello world")`, 11},
+		{`len(1)`, "argument to `len` not supported. Got INTEGER"},
+		{`len("one", "two")`, "wrong number of arguments. Got 2. Want 1"},
+	}
+
+	for _, tt := range tests {
+		evaluated := testEval(tt.input)
+
+		switch expected := tt.expected.(type) {
+		case int:
+			testIntegerObject(t, evaluated, int64(expected))
+		case string:
+			errObj, ok := evaluated.(*object.Error)
+
+			if !ok {
+				t.Errorf("object is not Error. Got %T (%+v)", evaluated, evaluated)
+				continue
+			}
+
+			if errObj.Message != expected {
+				t.Errorf("wrong error message. Expected %q. Got %q", expected, errObj.Message)
+			}
+		}
+	}
 }
 
 func testEval(input string) object.Object {

@@ -1,6 +1,10 @@
 package evaluator
 
-import "github.com/akyrey/monkey-programming-language/object"
+import (
+	"fmt"
+
+	"github.com/akyrey/monkey-programming-language/object"
+)
 
 var builtins = map[string]*object.Builtin{
 	"len": {
@@ -95,9 +99,22 @@ var builtins = map[string]*object.Builtin{
 
 			newElements := make([]object.Object, length+1, length+1)
 			copy(newElements, arr.Elements)
-            newElements[length] = args[1]
+			newElements[length] = args[1]
 
 			return &object.Array{Elements: newElements}
+		},
+	},
+	"puts": {
+		Fn: func(args ...object.Object) object.Object {
+			if len(args) < 1 {
+				return newError("wrong number of arguments. Got %d. Want at least 1", len(args))
+			}
+
+			for _, arg := range args {
+				fmt.Println(arg.Inspect())
+			}
+
+			return NULL
 		},
 	},
 }

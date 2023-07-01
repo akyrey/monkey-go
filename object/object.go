@@ -22,6 +22,8 @@ const (
 	ERROR_OBJ        = "ERROR"
 	FUNCTION_OBJ     = "FUNCTION"
 	BUILTIN_OBJ      = "BUILTIN"
+	// Macro system
+	QUOTE_OBJ = "QUOTE"
 )
 
 // Representation of every Monkey value
@@ -275,4 +277,20 @@ func (h *Hash) Inspect() string {
 	out.WriteString("}")
 
 	return out.String()
+}
+
+/*******************************************************************************/
+/*******************************************************************************/
+/******************************** Macro system *********************************/
+/*******************************************************************************/
+/*******************************************************************************/
+type Quote struct {
+	Node ast.Node
+}
+
+func (q *Quote) Type() ObjectType {
+	return QUOTE_OBJ
+}
+func (q *Quote) Inspect() string {
+	return "QUOTE(" + q.Node.String() + ")"
 }

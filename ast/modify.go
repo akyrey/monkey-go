@@ -2,6 +2,7 @@ package ast
 
 type ModifierFunc func(Node) Node
 
+// TODO: implement error handling
 func Modify(node Node, modifier ModifierFunc) Node {
 	// Here we use recursion to traverse all children, replacing each node with the one returned by the call
 	switch node := node.(type) {
